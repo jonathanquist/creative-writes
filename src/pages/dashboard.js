@@ -27,7 +27,14 @@ export default function Dashboard() {
     const collectionRef = collection(db, "posts");
     const q = query(collectionRef, where("user", "==", user.uid));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      setPosts(snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
+      const dataToSort = snapshot.docs.map((doc) => ({
+        ...doc.data(),
+        id: doc.id,
+      }));
+      console.log(dataToSort);
+      dataToSort.sort((a, b) => Number(b.timestamp) - Number(a.timestamp));
+      console.log(dataToSort);
+      setPosts(dataToSort);
     });
     return unsubscribe;
   };
@@ -35,7 +42,8 @@ export default function Dashboard() {
   //Delete Post
   const deletePost = async (id) => {
     const docRef = doc(db, "posts", id);
-    await deleteDoc(docRef);
+    console.log(docRef);
+    //await deleteDoc(docRef);
   };
 
   //Get users data

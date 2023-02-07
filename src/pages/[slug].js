@@ -5,12 +5,13 @@ import { auth, db } from "utils/firebase";
 import { toast } from "react-toastify";
 import {
   arrayUnion,
+  deleteDoc,
   doc,
-  getDoc,
   onSnapshot,
   Timestamp,
   updateDoc,
 } from "firebase/firestore";
+import { BsTrash2Fill } from "react-icons/bs";
 
 export default function Details() {
   const router = useRouter();
@@ -39,16 +40,18 @@ export default function Details() {
         avatar: auth.currentUser.photoURL,
         userName: auth.currentUser.displayName,
         time: Timestamp.now(),
+        user: auth.currentUser.uid,
+        id: auth.currentUser.uid + routeData.id + Number(Timestamp.now()),
       }),
     });
-
     setMessage("");
   };
 
   //Get Comments
   const getComments = async () => {
     const docRef = doc(db, "posts", routeData.id);
-    const unsubscribe = await onSnapshot(docRef, (snapshot) => {
+    const unsubscribe = onSnapshot(docRef, (snapshot) => {
+      console.log(snapshot.data);
       setAllMessages(snapshot.data().comments);
     });
     return unsubscribe;
@@ -59,6 +62,17 @@ export default function Details() {
     //console.log("Run this function");
     getComments();
   }, [router.isReady]);
+
+  //Remove comments
+  const deleteComment = async (index) => {
+    let updateMessages = [...allMessages];
+    updateMessages.splice(index, 1);
+
+    const docRef = doc(db, "posts", routeData.id);
+    await updateDoc(docRef, {
+      comments: [...updateMessages],
+    });
+  };
 
   return (
     <div>
@@ -81,13 +95,24 @@ export default function Details() {
         </div>
         <div className="py-6">
           <h2 className="font-bold">Comments</h2>
-          {allMessages?.map((message) => (
-            <div className="bg-white p-4 my-4 border-2" key={message.time}>
+          {allMessages?.map((message, index) => (
+            <div className="bg-white p-4 my-4 border-2" key={message.id}>
               <div className="flex items-center gap-2 mb-4 text-sm">
                 <img className="w-10 rounded-full" src={message.avatar} />
                 <h3>{message.userName}</h3>
               </div>
               <p>{message.message}</p>
+              {message.user === auth.currentUser.uid ? (
+                <button
+                  onClick={() => deleteComment(index)}
+                  className="text-pink-600 flex items-center justify-center gap-2 py-2 text-sm"
+                >
+                  <BsTrash2Fill />
+                  Delete
+                </button>
+              ) : (
+                ""
+              )}
             </div>
           ))}
         </div>

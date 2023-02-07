@@ -7,6 +7,7 @@ import {
   collection,
   doc,
   serverTimestamp,
+  setDoc,
   updateDoc,
 } from "firebase/firestore";
 import { toast } from "react-toastify";
@@ -52,13 +53,14 @@ export default function Post() {
       return route.push("/");
     } else {
       //Make a new post
-      const collectionRef = collection(db, "posts");
-      await addDoc(collectionRef, {
+      const collectionRef = doc(collection(db, "posts"));
+      await setDoc(collectionRef, {
         ...post,
         timestamp: serverTimestamp(),
         user: user.uid,
         avatar: user.photoURL,
         username: user.displayName,
+        id: collectionRef.id,
       });
       setPost({ description: "" });
       toast.success("Post has been made 🛫", {
